@@ -1,11 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ArrowRight, Check, Loader2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Progress } from '@/shared/ui/progress'
-import { useAuth } from '@/app/providers/auth-provider'
 import { cn } from '@/shared/lib/utils'
 
 export const Route = createFileRoute('/app/analyze')({
@@ -19,51 +17,58 @@ const steps = [
     { id: 4, label: 'Generating fit', description: 'Finding your best product matches' },
 ]
 
+// Total analysis time: 5 seconds (1.25 seconds per step)
+const STEP_DURATION_MS = 1250
+
 function AnalyzePage() {
-    const { token } = useAuth()
-    const queryClient = useQueryClient()
+    const [currentStep, setCurrentStep] = useState(1)
+    const [isComplete, setIsComplete] = useState(false)
+    const [progress, setProgress] = useState(0)
 
-    const { data: status } = useQuery({
-        queryKey: ['analysis', 'status'],
-        queryFn: async () => {
-            const res = await fetch('/api/analysis/status', {
-                headers: { Authorization: `Bearer ${token}` },
+    // Check if analysis was already completed
+    useEffect(() => {
+        const analysisComplete = localStorage.getItem('creatr-analysis-complete')
+        if (analysisComplete === 'true') {
+            setIsComplete(true)
+            setCurrentStep(5) // Past all steps
+        }
+    }, [])
+
+    // Progress animation within each step
+    useEffect(() => {
+        if (isComplete) return
+
+        const progressInterval = setInterval(() => {
+            setProgress((prev) => {
+                if (prev >= 100) return 0
+                return prev + 10
             })
-            return res.json()
-        },
-        refetchInterval: (query) => {
-            const data = query.state.data
-            if (data?.data?.status === 'complete' || data?.data?.status === 'failed') {
-                return false
-            }
-            return 1000
-        },
-    })
+        }, STEP_DURATION_MS / 10)
 
-    const startMutation = useMutation({
-        mutationFn: async () => {
-            const res = await fetch('/api/analysis/start', {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
-            })
-            return res.json()
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['analysis'] })
-        },
-    })
+        return () => clearInterval(progressInterval)
+    }, [isComplete, currentStep])
 
-    const currentStatus = status?.data?.status || 'idle'
-    const currentStep = status?.data?.step || 0
+    // Step progression - complete in 5 seconds total
+    const advanceStep = useCallback(() => {
+        if (isComplete) return
+
+        if (currentStep < steps.length) {
+            setCurrentStep((prev) => prev + 1)
+            setProgress(0)
+        } else if (currentStep === steps.length) {
+            // All steps complete
+            setCurrentStep(5)
+            setIsComplete(true)
+            localStorage.setItem('creatr-analysis-complete', 'true')
+        }
+    }, [currentStep, isComplete])
 
     useEffect(() => {
-        if (currentStatus === 'idle' && !startMutation.isPending) {
-            startMutation.mutate()
-        }
-    }, [currentStatus, startMutation])
+        if (isComplete) return
 
-    const isComplete = currentStatus === 'complete'
-    const isFailed = currentStatus === 'failed'
+        const timer = setTimeout(advanceStep, STEP_DURATION_MS)
+        return () => clearTimeout(timer)
+    }, [advanceStep, isComplete])
 
     return (
         <div className="mx-auto max-w-lg space-y-6">
@@ -74,11 +79,11 @@ function AnalyzePage() {
                 <p className="text-muted-foreground">
                     {isComplete
                         ? 'We found the best products for your audience.'
-                        : 'This usually takes about 30 seconds...'}
+                        : 'This usually takes about 5 seconds...'}
                 </p>
             </div>
 
-            {!isComplete && !isFailed && (
+            {!isComplete && (
                 <div className="py-8">
                     <div className="relative mx-auto h-24 w-24">
                         <div className="absolute inset-0 animate-ping rounded-full bg-primary/30" />
@@ -120,7 +125,7 @@ function AnalyzePage() {
                                     </p>
                                     <p className="text-sm text-muted-foreground">{step.description}</p>
                                     {isActive && !isDone && (
-                                        <Progress value={50} className="mt-2 h-1" />
+                                        <Progress value={progress} className="mt-2 h-1" />
                                     )}
                                 </div>
                             </div>
@@ -128,13 +133,6 @@ function AnalyzePage() {
                     })}
                 </CardContent>
             </Card>
-
-            {isFailed && (
-                <div className="text-center">
-                    <p className="mb-4 text-destructive">Analysis failed. Please try again.</p>
-                    <Button onClick={() => startMutation.mutate()}>Retry Analysis</Button>
-                </div>
-            )}
 
             {isComplete && (
                 <div className="flex justify-center">
@@ -148,3 +146,4 @@ function AnalyzePage() {
         </div>
     )
 }
+

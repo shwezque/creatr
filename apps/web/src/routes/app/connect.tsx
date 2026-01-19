@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { ArrowRight, Check, Loader2, AlertCircle, Instagram, Youtube } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
@@ -50,7 +50,6 @@ function saveConnections(connections: SocialConnection[]) {
 
 function ConnectPage() {
     const { toast } = useToast()
-    const navigate = useNavigate()
     const [connections, setConnections] = useState<SocialConnection[]>([])
     const [connectingPlatform, setConnectingPlatform] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -91,11 +90,6 @@ function ConnectPage() {
             title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} connected!`,
             description: 'Your account has been linked successfully.'
         })
-
-        // Navigate to analyze page after connecting
-        setTimeout(() => {
-            navigate({ to: '/app/analyze' })
-        }, 500)
     }
 
     const handleDisconnect = async (platform: string) => {
