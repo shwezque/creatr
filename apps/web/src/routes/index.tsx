@@ -60,17 +60,9 @@ function LandingPage() {
                     </p>
 
                     <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-                        {isAuthenticated ? (
-                            <Button size="lg" asChild>
-                                <Link to="/app/connect">
-                                    Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
-                                </Link>
-                            </Button>
-                        ) : (
-                            <Button size="lg" onClick={handleGetStarted} disabled={isLoading}>
-                                {isLoading ? 'Loading...' : 'Get Started'} <ArrowRight className="ml-2 h-4 w-4" />
-                            </Button>
-                        )}
+                        <Button size="lg" onClick={handleGetStarted} disabled={isLoading}>
+                            {isLoading ? 'Loading...' : 'Get Started'} <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
                         <Button variant="outline" size="lg" asChild>
                             <Link to="/about">Learn More</Link>
                         </Button>
