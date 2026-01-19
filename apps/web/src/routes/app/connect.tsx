@@ -1,9 +1,8 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
 import { ArrowRight, Check, Loader2, AlertCircle, Instagram, Youtube } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
-import { useAuth } from '@/app/providers/auth-provider'
 import { useToast } from '@/shared/ui/use-toast'
 import { cn, formatNumber } from '@/shared/lib/utils'
 
@@ -11,11 +10,25 @@ export const Route = createFileRoute('/app/connect')({
     component: ConnectPage,
 })
 
+interface SocialConnection {
+    platform: string
+    status: 'connected' | 'disconnected'
+    handle?: string
+    followers?: number
+}
+
 const platforms = [
     { id: 'tiktok', name: 'TikTok', icon: TikTokIcon, color: 'bg-black' },
     { id: 'youtube', name: 'YouTube', icon: Youtube, color: 'bg-red-600' },
     { id: 'instagram', name: 'Instagram', icon: Instagram, color: 'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600' },
 ]
+
+// Mock data for demo accounts
+const mockAccountData: Record<string, { handle: string; followers: number }> = {
+    tiktok: { handle: '@creative_demo', followers: 125400 },
+    youtube: { handle: 'Demo Creator', followers: 48200 },
+    instagram: { handle: '@demo.creator', followers: 89100 },
+}
 
 function TikTokIcon({ className }: { className?: string }) {
     return (
@@ -25,79 +38,72 @@ function TikTokIcon({ className }: { className?: string }) {
     )
 }
 
+function getStoredConnections(): SocialConnection[] {
+    if (typeof window === 'undefined') return []
+    const stored = localStorage.getItem('creatr-connections')
+    return stored ? JSON.parse(stored) : []
+}
+
+function saveConnections(connections: SocialConnection[]) {
+    localStorage.setItem('creatr-connections', JSON.stringify(connections))
+}
+
 function ConnectPage() {
-    const { token } = useAuth()
     const { toast } = useToast()
-    const queryClient = useQueryClient()
     const navigate = useNavigate()
+    const [connections, setConnections] = useState<SocialConnection[]>([])
+    const [connectingPlatform, setConnectingPlatform] = useState<string | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
 
-    const { data: socials, isLoading } = useQuery({
-        queryKey: ['socials'],
-        queryFn: async () => {
-            const res = await fetch('/api/socials', {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-            return res.json()
-        },
-    })
+    // Load connections from localStorage on mount
+    useEffect(() => {
+        setConnections(getStoredConnections())
+        setIsLoading(false)
+    }, [])
 
-    const { data: analysis } = useQuery({
-        queryKey: ['analysis', 'status'],
-        queryFn: async () => {
-            const res = await fetch('/api/analysis/status', {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-            return res.json()
-        },
-    })
+    const getConnection = (platform: string) => connections.find((c) => c.platform === platform)
+    const connectedCount = connections.filter((c) => c.status === 'connected').length
 
-    const connectMutation = useMutation({
-        mutationFn: async (platform: string) => {
-            const res = await fetch('/api/socials/connect', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ platform }),
-            })
-            return res.json()
-        },
-        onSuccess: (_data, platform) => {
-            queryClient.invalidateQueries({ queryKey: ['socials'] })
-            toast({ title: `${platform} connected!`, description: 'Your account has been linked successfully.' })
-            // Navigate to analyze page after connecting
-            setTimeout(() => {
-                navigate({ to: '/app/analyze' })
-            }, 500)
-        },
-        onError: () => {
-            toast({ title: 'Connection failed', description: 'Please try again.', variant: 'destructive' })
-        },
-    })
+    const handleConnect = async (platform: string) => {
+        setConnectingPlatform(platform)
 
-    const disconnectMutation = useMutation({
-        mutationFn: async (platform: string) => {
-            const res = await fetch('/api/socials/disconnect', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ platform }),
-            })
-            return res.json()
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['socials'] })
-            toast({ title: 'Account disconnected' })
-        },
-    })
+        // Simulate connection delay for UX
+        await new Promise((resolve) => setTimeout(resolve, 800))
 
-    const connections = socials?.data || []
-    const getConnection = (platform: string) => connections.find((c: { platform: string }) => c.platform === platform)
-    const connectedCount = connections.filter((c: { status: string }) => c.status === 'connected').length
-    const analysisComplete = analysis?.data?.status === 'complete'
+        const mockData = mockAccountData[platform]
+        const newConnection: SocialConnection = {
+            platform,
+            status: 'connected',
+            handle: mockData?.handle || `@demo_${platform}`,
+            followers: mockData?.followers || Math.floor(Math.random() * 100000) + 10000,
+        }
+
+        const updatedConnections = [
+            ...connections.filter((c) => c.platform !== platform),
+            newConnection,
+        ]
+
+        setConnections(updatedConnections)
+        saveConnections(updatedConnections)
+        setConnectingPlatform(null)
+
+        toast({
+            title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} connected!`,
+            description: 'Your account has been linked successfully.'
+        })
+
+        // Navigate to analyze page after connecting
+        setTimeout(() => {
+            navigate({ to: '/app/analyze' })
+        }, 500)
+    }
+
+    const handleDisconnect = async (platform: string) => {
+        const updatedConnections = connections.filter((c) => c.platform !== platform)
+        setConnections(updatedConnections)
+        saveConnections(updatedConnections)
+        toast({ title: 'Account disconnected' })
+    }
 
     if (isLoading) {
         return (
@@ -120,7 +126,7 @@ function ConnectPage() {
                 {platforms.map((platform) => {
                     const connection = getConnection(platform.id)
                     const isConnected = connection?.status === 'connected'
-                    const isPending = connectMutation.isPending && connectMutation.variables === platform.id
+                    const isPending = connectingPlatform === platform.id
 
                     return (
                         <Card key={platform.id} className={cn(isConnected && 'border-primary/50')}>
@@ -145,15 +151,14 @@ function ConnectPage() {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => disconnectMutation.mutate(platform.id)}
-                                        disabled={disconnectMutation.isPending}
+                                        onClick={() => handleDisconnect(platform.id)}
                                     >
                                         Disconnect
                                     </Button>
                                 ) : (
                                     <Button
                                         size="sm"
-                                        onClick={() => connectMutation.mutate(platform.id)}
+                                        onClick={() => handleConnect(platform.id)}
                                         disabled={isPending}
                                     >
                                         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Connect'}
@@ -183,21 +188,14 @@ function ConnectPage() {
 
             {connectedCount > 0 && (
                 <div className="flex justify-center pt-4">
-                    {analysisComplete ? (
-                        <Button asChild size="lg">
-                            <Link to="/app/recommendations">
-                                View Recommendations <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
-                        </Button>
-                    ) : (
-                        <Button asChild size="lg">
-                            <Link to="/app/analyze">
-                                Analyze My Profile <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
-                        </Button>
-                    )}
+                    <Button asChild size="lg">
+                        <Link to="/app/analyze">
+                            Analyze My Profile <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                    </Button>
                 </div>
             )}
         </div>
     )
 }
+
