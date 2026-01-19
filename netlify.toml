@@ -1,7 +1,6 @@
 [build]
-  base = "apps/web"
-  command = "cd ../.. && npm install && npm run build -w @creatr/shared && npm run build -w @creatr/web"
-  publish = "dist"
+  command = "npm install && npm run build -w @creatr/shared && npm run build -w @creatr/web"
+  publish = "apps/web/dist"
 
 [[redirects]]
   from = "/*"
