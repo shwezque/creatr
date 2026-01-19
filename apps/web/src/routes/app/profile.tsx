@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
 import {
     ChevronRight, CreditCard, HelpCircle, Link2, LogOut, Moon,
     Shield, Sun
@@ -15,34 +15,39 @@ export const Route = createFileRoute('/app/profile')({
     component: ProfilePage,
 })
 
+interface SocialConnection {
+    platform: string
+    status: string
+    followers?: number
+}
+
+function getStoredConnections(): SocialConnection[] {
+    if (typeof window === 'undefined') return []
+    const stored = localStorage.getItem('creatr-connections')
+    return stored ? JSON.parse(stored) : []
+}
+
+function getStoredShopProducts(): string[] {
+    if (typeof window === 'undefined') return []
+    const stored = localStorage.getItem('creatr-shop-products')
+    return stored ? JSON.parse(stored) : []
+}
+
 function ProfilePage() {
-    const { user, logout, token } = useAuth()
+    const { user, logout } = useAuth()
     const { theme, setTheme } = useTheme()
     const navigate = useNavigate()
+    const [connectedPlatforms, setConnectedPlatforms] = useState<SocialConnection[]>([])
+    const [productCount, setProductCount] = useState(0)
 
-    const { data: socials } = useQuery({
-        queryKey: ['socials'],
-        queryFn: async () => {
-            const res = await fetch('/api/socials', {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-            return res.json()
-        },
-    })
+    useEffect(() => {
+        const connections = getStoredConnections()
+        const products = getStoredShopProducts()
+        setConnectedPlatforms(connections.filter((c) => c.status === 'connected'))
+        setProductCount(products.length)
+    }, [])
 
-    const { data: creatorProducts } = useQuery({
-        queryKey: ['creator-products'],
-        queryFn: async () => {
-            const res = await fetch('/api/products/creator/products', {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-            return res.json()
-        },
-    })
-
-    const connectedPlatforms = socials?.data?.filter((s: { status: string }) => s.status === 'connected') || []
-    const productCount = creatorProducts?.data?.length || 0
-    const totalFollowers = connectedPlatforms.reduce((sum: number, p: { followers?: number }) => sum + (p.followers || 0), 0)
+    const totalFollowers = connectedPlatforms.reduce((sum, p) => sum + (p.followers || 0), 0)
 
     const handleLogout = async () => {
         await logout()
@@ -102,8 +107,8 @@ function ProfilePage() {
                     Creator Credit
                 </MenuLink>
 
-                <MenuLink to="/app/cocreate" icon={Shield}>
-                    Co-Create with Brands
+                <MenuLink to="/app/leaderboard" icon={Shield}>
+                    Leaderboard
                 </MenuLink>
             </div>
 
@@ -171,3 +176,4 @@ function MenuLink({
         </Card>
     )
 }
+

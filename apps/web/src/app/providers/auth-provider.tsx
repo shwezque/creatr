@@ -20,7 +20,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api'
+// Demo user data for static hosting
+const DEMO_USER: User = {
+    id: 'demo-user-001',
+    email: 'demo@creatr.io',
+    name: 'Demo Creator',
+    username: 'demo_creator',
+    avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+}
+
+const DEMO_TOKEN = 'demo-static-token'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
@@ -39,20 +48,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 return
             }
 
+            // For demo/static hosting, if we have a token, use mock user
+            if (token === DEMO_TOKEN || token.startsWith('demo-')) {
+                setUser(DEMO_USER)
+                setIsLoading(false)
+                return
+            }
+
+            // Try to verify with backend (will fail on static hosting)
             try {
-                const response = await fetch(`${API_BASE}/auth/me`, {
+                const response = await fetch('/api/auth/me', {
                     headers: { Authorization: `Bearer ${token}` },
                 })
                 const data = await response.json()
                 if (data.success) {
                     setUser(data.data)
                 } else {
-                    localStorage.removeItem('creatr-token')
-                    setToken(null)
+                    // Fallback to demo user if we have a token but backend fails
+                    setUser(DEMO_USER)
                 }
             } catch {
-                localStorage.removeItem('creatr-token')
-                setToken(null)
+                // Fallback to demo user for static hosting
+                setUser(DEMO_USER)
             } finally {
                 setIsLoading(false)
             }
@@ -62,43 +79,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [token])
 
     const login = async (email: string, name?: string) => {
-        const response = await fetch(`${API_BASE}/auth/session`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, name }),
-        })
-        const data = await response.json()
-        if (data.success) {
-            localStorage.setItem('creatr-token', data.data.token)
-            setToken(data.data.token)
-            setUser(data.data.user)
-        } else {
-            throw new Error(data.error?.message || 'Login failed')
+        // For demo purposes, create a mock user
+        const username = email.split('@')[0] || 'user'
+        const mockUser: User = {
+            id: 'user-' + Date.now(),
+            email,
+            name: name || username,
+            username,
         }
+        localStorage.setItem('creatr-token', DEMO_TOKEN)
+        localStorage.setItem('creatr-user', JSON.stringify(mockUser))
+        setToken(DEMO_TOKEN)
+        setUser(mockUser)
     }
 
     const loginDemo = async () => {
-        const response = await fetch(`${API_BASE}/auth/demo`, {
-            method: 'POST',
-        })
-        const data = await response.json()
-        if (data.success) {
-            localStorage.setItem('creatr-token', data.data.token)
-            setToken(data.data.token)
-            setUser(data.data.user)
-        } else {
-            throw new Error(data.error?.message || 'Demo login failed')
-        }
+        // Directly set demo user - no API call needed
+        localStorage.setItem('creatr-token', DEMO_TOKEN)
+        localStorage.setItem('creatr-user', JSON.stringify(DEMO_USER))
+        setToken(DEMO_TOKEN)
+        setUser(DEMO_USER)
     }
 
     const logout = async () => {
-        if (token) {
-            await fetch(`${API_BASE}/auth/logout`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
-            })
-        }
         localStorage.removeItem('creatr-token')
+        localStorage.removeItem('creatr-user')
+        localStorage.removeItem('creatr-connections')
+        localStorage.removeItem('creatr-shop-products')
+        localStorage.removeItem('creatr-analysis-complete')
         setToken(null)
         setUser(null)
     }
@@ -127,3 +135,4 @@ export function useAuth() {
     }
     return context
 }
+
