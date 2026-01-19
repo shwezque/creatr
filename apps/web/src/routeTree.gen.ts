@@ -21,6 +21,7 @@ import { Route as AppNotificationsRouteImport } from './routes/app/notifications
 import { Route as AppLeaderboardRouteImport } from './routes/app/leaderboard'
 import { Route as AppCreditRouteImport } from './routes/app/credit'
 import { Route as AppConnectRouteImport } from './routes/app/connect'
+import { Route as AppCocreateRouteImport } from './routes/app/cocreate'
 import { Route as AppAnalyzeRouteImport } from './routes/app/analyze'
 import { Route as AppAnalyticsRouteImport } from './routes/app/analytics'
 import { Route as AppProductsProductIdRouteImport } from './routes/app/products.$productId'
@@ -85,6 +86,11 @@ const AppConnectRoute = AppConnectRouteImport.update({
   path: '/connect',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCocreateRoute = AppCocreateRouteImport.update({
+  id: '/cocreate',
+  path: '/cocreate',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAnalyzeRoute = AppAnalyzeRouteImport.update({
   id: '/analyze',
   path: '/analyze',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/analyze': typeof AppAnalyzeRoute
+  '/app/cocreate': typeof AppCocreateRoute
   '/app/connect': typeof AppConnectRoute
   '/app/credit': typeof AppCreditRoute
   '/app/leaderboard': typeof AppLeaderboardRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/analyze': typeof AppAnalyzeRoute
+  '/app/cocreate': typeof AppCocreateRoute
   '/app/connect': typeof AppConnectRoute
   '/app/credit': typeof AppCreditRoute
   '/app/leaderboard': typeof AppLeaderboardRoute
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/analyze': typeof AppAnalyzeRoute
+  '/app/cocreate': typeof AppCocreateRoute
   '/app/connect': typeof AppConnectRoute
   '/app/credit': typeof AppCreditRoute
   '/app/leaderboard': typeof AppLeaderboardRoute
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/analytics'
     | '/app/analyze'
+    | '/app/cocreate'
     | '/app/connect'
     | '/app/credit'
     | '/app/leaderboard'
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/app/analytics'
     | '/app/analyze'
+    | '/app/cocreate'
     | '/app/connect'
     | '/app/credit'
     | '/app/leaderboard'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/analytics'
     | '/app/analyze'
+    | '/app/cocreate'
     | '/app/connect'
     | '/app/credit'
     | '/app/leaderboard'
@@ -297,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConnectRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/cocreate': {
+      id: '/app/cocreate'
+      path: '/cocreate'
+      fullPath: '/app/cocreate'
+      preLoaderRoute: typeof AppCocreateRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/analyze': {
       id: '/app/analyze'
       path: '/analyze'
@@ -324,6 +343,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppAnalyzeRoute: typeof AppAnalyzeRoute
+  AppCocreateRoute: typeof AppCocreateRoute
   AppConnectRoute: typeof AppConnectRoute
   AppCreditRoute: typeof AppCreditRoute
   AppLeaderboardRoute: typeof AppLeaderboardRoute
@@ -339,6 +359,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppAnalyzeRoute: AppAnalyzeRoute,
+  AppCocreateRoute: AppCocreateRoute,
   AppConnectRoute: AppConnectRoute,
   AppCreditRoute: AppCreditRoute,
   AppLeaderboardRoute: AppLeaderboardRoute,

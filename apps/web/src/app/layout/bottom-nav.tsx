@@ -1,13 +1,12 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { LayoutDashboard, ShoppingBag, Search, BarChart3, Trophy, User } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, BarChart3, Sparkles, User } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 
 const navItems = [
     { path: '/app', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/app/shoplinks', icon: ShoppingBag, label: 'Shop Links' },
-    { path: '/app/search', icon: Search, label: 'Search' },
+    { path: '/app/cocreate', icon: Sparkles, label: 'Co-Create' },
     { path: '/app/analytics', icon: BarChart3, label: 'Analytics' },
-    { path: '/app/leaderboard', icon: Trophy, label: 'Rank' },
     { path: '/app/profile', icon: User, label: 'Profile' },
 ]
 

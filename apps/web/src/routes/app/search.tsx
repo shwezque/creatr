@@ -55,8 +55,9 @@ function SearchPage() {
         setMyProductIds(new Set(getStoredShopProducts()))
     }, [])
 
+    // Show all products, filter live based on search query
     const filteredProducts = useMemo(() => {
-        if (!query.trim()) return []
+        if (!query.trim()) return allProducts
         const lowerQuery = query.toLowerCase()
         return allProducts.filter(
             p => p.name.toLowerCase().includes(lowerQuery) ||
@@ -97,14 +98,7 @@ function SearchPage() {
                 )}
             </div>
 
-            {!query && (
-                <div className="py-12 text-center text-muted-foreground">
-                    <Search className="mx-auto mb-4 h-12 w-12 opacity-50" />
-                    <p>Search for products to add to your shop</p>
-                </div>
-            )}
-
-            {query && filteredProducts.length === 0 && (
+            {filteredProducts.length === 0 && (
                 <div className="py-12 text-center text-muted-foreground">
                     <p>No products found for "{query}"</p>
                 </div>
@@ -118,16 +112,16 @@ function SearchPage() {
                     <Card key={product.id}>
                         <CardContent className="flex items-center gap-3 p-3">
                             <Link to="/app/products/$productId" params={{ productId: product.id }}>
-                                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
+                                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-muted">
                                     <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
                                 </div>
                             </Link>
                             <div className="flex-1 min-w-0">
                                 <Link to="/app/products/$productId" params={{ productId: product.id }}>
-                                    <p className="line-clamp-1 font-medium">{product.name}</p>
+                                    <p className="line-clamp-1 text-sm font-medium">{product.name}</p>
                                 </Link>
-                                <p className="text-sm text-muted-foreground">{product.brand}</p>
-                                <div className="flex items-center gap-2 text-sm">
+                                <p className="text-xs text-muted-foreground">{product.brand}</p>
+                                <div className="flex items-center gap-2 text-xs">
                                     <span className="font-medium">{formatCurrency(product.price)}</span>
                                     <span className="text-green-600 dark:text-green-400">{product.commission}%</span>
                                 </div>
