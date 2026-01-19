@@ -72,10 +72,10 @@ function CoCreatePage() {
                     {/* Twin Avatar Preview */}
                     <div className="flex justify-center gap-4 py-4">
                         <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-blue-100">
-                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=face" alt="Twin preview" className="h-full w-full object-cover" />
+                            <img src="/modern-mulan.jpg" alt="Twin preview" className="h-full w-full object-cover" />
                         </div>
                         <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-blue-100">
-                            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=face" alt="Twin preview" className="h-full w-full object-cover" />
+                            <img src="/modern-mulan.jpg" alt="Twin preview" className="h-full w-full object-cover" />
                         </div>
                     </div>
                     <p className="text-center text-sm text-primary">See Modern Mulan in Action</p>

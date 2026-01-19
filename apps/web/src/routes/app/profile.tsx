@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import {
     ChevronRight, CreditCard, HelpCircle, Link2, LogOut, Moon,
-    Shield, Sun
+    Sun
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
@@ -34,7 +34,7 @@ function getStoredShopProducts(): string[] {
 }
 
 function ProfilePage() {
-    const { user, logout } = useAuth()
+    const { logout } = useAuth()
     const { theme, setTheme } = useTheme()
     const navigate = useNavigate()
     const [connectedPlatforms, setConnectedPlatforms] = useState<SocialConnection[]>([])
@@ -59,17 +59,11 @@ function ProfilePage() {
             {/* Profile Header */}
             <div className="flex items-center gap-4">
                 <div className="h-16 w-16 overflow-hidden rounded-full bg-muted">
-                    {user?.avatarUrl ? (
-                        <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
-                    ) : (
-                        <div className="flex h-full w-full items-center justify-center text-2xl font-medium">
-                            {user?.name?.charAt(0) || 'C'}
-                        </div>
-                    )}
+                    <img src="/modern-mulan.jpg" alt="Modern Mulan" className="h-full w-full object-cover" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-bold">{user?.name}</h1>
-                    <p className="text-muted-foreground">@{user?.username}</p>
+                    <h1 className="text-xl font-bold">Modern Mulan</h1>
+                    <p className="text-muted-foreground">@modernmulan</p>
                 </div>
             </div>
 
@@ -105,10 +99,6 @@ function ProfilePage() {
 
                 <MenuLink to="/app/credit" icon={CreditCard}>
                     Creator Credit
-                </MenuLink>
-
-                <MenuLink to="/app/leaderboard" icon={Shield}>
-                    Leaderboard
                 </MenuLink>
             </div>
 
