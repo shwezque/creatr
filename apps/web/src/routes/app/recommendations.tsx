@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { Check, Plus, Star } from 'lucide-react'
+import { ArrowRight, Check, Plus, Star } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { useToast } from '@/shared/ui/use-toast'
@@ -172,9 +172,22 @@ function RecommendationsPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold">Recommended For You</h1>
-                <p className="text-muted-foreground">Products matched to your content and audience.</p>
+            <div className="flex items-start justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold">Recommended For You</h1>
+                    <p className="text-muted-foreground">Products matched to your content and audience.</p>
+                </div>
+                <Button asChild size="sm" className="shrink-0">
+                    <Link to="/app/shoplinks">
+                        {myProductIds.size > 0 && (
+                            <span className="mr-2 rounded-full bg-white/20 px-2 py-0.5 text-xs">
+                                {myProductIds.size}
+                            </span>
+                        )}
+                        Next
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                </Button>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
