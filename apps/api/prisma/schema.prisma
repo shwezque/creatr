@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  username  String   @unique
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  socialConnections SocialConnection[]
+  analysisSummary   AnalysisSummary?
+  creatorProducts   CreatorProduct[]
+  analyticsEvents   AnalyticsEvent[]
+  coCreateApps      CoCreateApplication[]
+  creditConsent     CreditConsent?
+  creditAssessment  CreditAssessment?
+  loanApplications  LoanApplication[]
+}
+
+model SocialConnection {
+  id          String   @id @default(cuid())
+  userId      String
+  platform    String   // youtube, tiktok, instagram
+  status      String   // connected, pending, error, disconnected
+  handle      String?
+  displayName String?
+  avatarUrl   String?
+  followers   Int?
+  avgViews    Int?
+  accountAge  Int?     // months
+  connectedAt DateTime?
+  metadata    String?  // JSON string
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+}
+
+model AnalysisSummary {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  status            String   // idle, fetching, analyzing, scoring, complete, failed
+  contentCategories String   // JSON array
+  audienceRegion    String?
+  audienceLanguage  String?
+  engagementScore   Int      @default(0)
+  consistencyScore  Int      @default(0)
+  recommendedNiches String   // JSON array
+  completedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  name         String
+  brand        String
+  brandLogoUrl String?
+  imageUrl     String
+  images       String   // JSON array
+  price        Float
+  srp          Float
+  commission   Float    // percentage
+  rating       Float
+  soldCount    Int      @default(0)
+  category     String
+  subcategory  String?
+  description  String
+  benefits     String   // JSON array
+  contentHooks String   // JSON array
+  isVerified   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  creatorProducts CreatorProduct[]
+  analyticsEvents AnalyticsEvent[]
+}
+
+model CreatorProduct {
+  id               String   @id @default(cuid())
+  userId           String
+  productId        String
+  shoplink         String?
+  shoplinkCreatedAt DateTime?
+  addedAt          DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  userId     String
+  productId  String
+  eventType  String   // click, conversion, payout
+  revenue    Float    @default(0)
+  commission Float    @default(0)
+  createdAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model LeaderboardSnapshot {
+  id          String   @id @default(cuid())
+  userId      String
+  username    String
+  displayName String
+  avatarUrl   String?
+  categories  String   // JSON array
+  earnings    Float
+  conversions Int
+  period      String   // 7d, 30d, all
+  rank        Int
+  snapshotAt  DateTime @default(now())
+}
+
+model BrandBrief {
+  id           String   @id @default(cuid())
+  brandName    String
+  brandLogoUrl String
+  title        String
+  description  String
+  compensation String
+  deadline     DateTime
+  categories   String   // JSON array
+  requirements String   // JSON array
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications CoCreateApplication[]
+}
+
+model CoCreateApplication {
+  id         String   @id @default(cuid())
+  userId     String
+  briefId    String?
+  categories String   // JSON array
+  message    String
+  status     String   // not_eligible, eligible, applied, accepted, rejected
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brief BrandBrief? @relation(fields: [briefId], references: [id])
+}
+
+model CreditConsent {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  hasConsented    Boolean   @default(false)
+  consentedAt     DateTime?
+  revokedAt       DateTime?
+  dataExplanation String    // JSON array
+  notUsed         String    // JSON array
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CreditAssessment {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  tier          String   // A, B, C, D
+  score         Int      // 0-1000
+  maxLoanAmount Float
+  aprMin        Float
+  aprMax        Float
+  termOptions   String   // JSON array
+  factors       String   // JSON array
+  calculatedAt  DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LoanOffer {
+  id            String   @id @default(cuid())
+  partnerId     String
+  partnerName   String
+  partnerLogoUrl String
+  minAmount     Float
+  maxAmount     Float
+  apr           Float
+  termMonths    Int
+  requirements  String   // JSON array
+  createdAt     DateTime @default(now())
+
+  applications LoanApplication[]
+}
+
+model LoanApplication {
+  id                String    @id @default(cuid())
+  userId            String
+  offerId           String
+  amount            Float
+  purpose           String
+  status            String    // pending, approved, rejected, active, completed
+  legalName         String
+  email             String
+  phone             String
+  country           String
+  payoutAccount     String?
+  kycCompleted      Boolean   @default(false)
+  approvedAt        DateTime?
+  rejectedReason    String?
+  repaymentSchedule String?   // JSON array
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offer LoanOffer @relation(fields: [offerId], references: [id])
+}
