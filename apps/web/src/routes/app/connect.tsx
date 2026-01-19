@@ -25,9 +25,9 @@ const platforms = [
 
 // Mock data for demo accounts
 const mockAccountData: Record<string, { handle: string; followers: number }> = {
-    tiktok: { handle: '@creative_demo', followers: 125400 },
-    youtube: { handle: 'Demo Creator', followers: 48200 },
-    instagram: { handle: '@demo.creator', followers: 89100 },
+    tiktok: { handle: '@modernmulan', followers: 125400 },
+    youtube: { handle: 'Modern Mulan', followers: 48200 },
+    instagram: { handle: '@modernmulan', followers: 89100 },
 }
 
 function TikTokIcon({ className }: { className?: string }) {

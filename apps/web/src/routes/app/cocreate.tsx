@@ -74,7 +74,7 @@ function CoCreatePage() {
                         <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-blue-100">
                             <img src="/modern-mulan.jpg" alt="Twin preview" className="h-full w-full object-cover" />
                         </div>
-                        <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-blue-100">
+                        <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-blue-100" style={{ transform: 'scaleX(-1)' }}>
                             <img src="/modern-mulan.jpg" alt="Twin preview" className="h-full w-full object-cover" />
                         </div>
                     </div>
