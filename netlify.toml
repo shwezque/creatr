@@ -1,0 +1,9 @@
+[build]
+  base = "apps/web"
+  command = "cd ../.. && npm install && npm run build -w @creatr/shared && npm run build -w @creatr/web"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
