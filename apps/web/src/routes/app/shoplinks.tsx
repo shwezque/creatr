@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { Copy, Share2 } from 'lucide-react'
+import { Copy } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { useToast } from '@/shared/ui/use-toast'
@@ -135,25 +135,17 @@ function ShoplinksPage() {
                         const product = mockProducts[link.productId] || { name: `Product ${link.productId}`, brand: 'Unknown', imageUrl: '', price: 0 }
                         return (
                             <Card key={link.id}>
-                                <CardContent className="p-4">
-                                    <div className="flex items-start gap-3">
-                                        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
-                                            <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium">{product.name}</p>
-                                            <p className="text-sm text-muted-foreground">{product.brand}</p>
-                                            <p className="mt-1 text-sm font-medium">{formatCurrency(product.price)}</p>
-                                        </div>
+                                <CardContent className="flex items-center gap-3 p-3">
+                                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+                                        <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
                                     </div>
-                                    <div className="mt-3 flex gap-2">
-                                        <Button variant="outline" size="sm" className="flex-1" onClick={() => copyLink(link.shoplink)}>
-                                            <Copy className="mr-2 h-4 w-4" /> Copy Link
-                                        </Button>
-                                        <Button variant="outline" size="icon" onClick={() => copyLink(link.shoplink)}>
-                                            <Share2 className="h-4 w-4" />
-                                        </Button>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="line-clamp-1 font-medium">{product.name}</p>
+                                        <p className="text-sm text-muted-foreground">{product.brand} • {formatCurrency(product.price)}</p>
                                     </div>
+                                    <Button variant="outline" size="sm" className="shrink-0" onClick={() => copyLink(link.shoplink)}>
+                                        <Copy className="mr-2 h-4 w-4" /> Copy
+                                    </Button>
                                 </CardContent>
                             </Card>
                         )

@@ -17,8 +17,8 @@ const steps = [
     { id: 4, label: 'Generating fit', description: 'Finding your best product matches' },
 ]
 
-// Total analysis time: 5 seconds (1.25 seconds per step)
-const STEP_DURATION_MS = 1250
+// Total analysis time: 3 seconds (750ms per step)
+const STEP_DURATION_MS = 750
 
 function AnalyzePage() {
     const [currentStep, setCurrentStep] = useState(1)

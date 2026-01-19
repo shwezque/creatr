@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { ArrowRight, Play, Star, TrendingUp, Users } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
@@ -11,6 +12,15 @@ export const Route = createFileRoute('/')({
 function LandingPage() {
     const { isAuthenticated, loginDemo, isLoading } = useAuth()
     const navigate = useNavigate()
+
+    // Reset all session data when landing page loads
+    useEffect(() => {
+        localStorage.removeItem('creatr-social-connections')
+        localStorage.removeItem('creatr-analysis-complete')
+        localStorage.removeItem('creatr-shop-products')
+        localStorage.removeItem('creatr-shoplinks')
+        localStorage.removeItem('creatr-token')
+    }, [])
 
     const handleGetStarted = async () => {
         // Try demo login first, with fallback for static hosting
