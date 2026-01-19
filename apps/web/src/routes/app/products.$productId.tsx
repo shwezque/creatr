@@ -160,7 +160,7 @@ function saveShopProducts(productIds: string[]) {
     localStorage.setItem('creatr-shop-products', JSON.stringify(productIds))
 }
 
-function getStoredShoplinks(): Array<{ productId: string; shoplink: string }> {
+function getStoredShoplinks(): Array<{ id: string; productId: string; shoplink: string }> {
     if (typeof window === 'undefined') return []
     const stored = localStorage.getItem('creatr-shoplinks')
     return stored ? JSON.parse(stored) : []

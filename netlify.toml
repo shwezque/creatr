@@ -2,6 +2,9 @@
   command = "npm install && npm run build -w @creatr/shared && npm run build -w @creatr/web"
   publish = "apps/web/dist"
 
+[build.environment]
+  NODE_VERSION = "18"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
