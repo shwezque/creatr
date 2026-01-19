@@ -16,16 +16,16 @@ function AboutPage() {
                     </Link>
                 </Button>
 
-                <h1 className="mb-6 text-2xl font-bold">About Creatr</h1>
+                <h1 className="mb-4 text-lg font-bold">About Creatr</h1>
 
-                <div className="prose prose-neutral max-w-none dark:prose-invert">
-                    <p className="text-sm text-muted-foreground">
+                <div className="space-y-4">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                         Creatr is a platform designed to help content creators monetize their social media presence
                         through affiliate marketing and brand partnerships.
                     </p>
 
-                    <h2 className="mt-8 text-base font-semibold">How It Works</h2>
-                    <ol className="list-decimal space-y-2 pl-6 text-sm text-muted-foreground">
+                    <h2 className="text-sm font-semibold">How It Works</h2>
+                    <ol className="list-decimal space-y-1 pl-4 text-xs text-muted-foreground">
                         <li>Connect your social accounts (YouTube, TikTok, Instagram)</li>
                         <li>Our AI analyzes your content to understand your niche</li>
                         <li>Get personalized product recommendations with competitive commissions</li>
@@ -33,15 +33,15 @@ function AboutPage() {
                         <li>Earn commissions on every sale</li>
                     </ol>
 
-                    <h2 className="mt-8 text-base font-semibold">Creatr Credit</h2>
-                    <p className="text-sm text-muted-foreground">
+                    <h2 className="text-sm font-semibold">Creatr Credit</h2>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                         Based on your creator performance, you may also qualify for exclusive loan offers through
                         our partner institutions. We calculate an estimated credit score using your platform metrics,
                         engagement rates, and affiliate performance - never your personal financial data.
                     </p>
 
-                    <h2 className="mt-8 text-base font-semibold">Co-Create with Brands</h2>
-                    <p className="text-sm text-muted-foreground">
+                    <h2 className="text-sm font-semibold">Co-Create with Brands</h2>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                         High-performing creators can unlock access to brand collaboration opportunities.
                         Get paid to create content and grow your audience with verified brands.
                     </p>

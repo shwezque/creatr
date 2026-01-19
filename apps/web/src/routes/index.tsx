@@ -10,7 +10,7 @@ export const Route = createFileRoute('/')({
 })
 
 function LandingPage() {
-    const { isAuthenticated, loginDemo, isLoading } = useAuth()
+    const { loginDemo, isLoading } = useAuth()
     const navigate = useNavigate()
 
     // Reset all session data when landing page loads
@@ -23,16 +23,16 @@ function LandingPage() {
     }, [])
 
     const handleGetStarted = async () => {
-        // Try demo login first, with fallback for static hosting
-        if (!isAuthenticated) {
-            try {
-                await loginDemo()
-            } catch (error) {
-                console.warn('Demo login not available (static hosting), using offline mode:', error)
-                // Set a demo token for static hosting - this allows the auth guard to pass
-                localStorage.setItem('creatr-token', 'demo-static-token')
-            }
+        // Set demo token first (for static hosting)
+        localStorage.setItem('creatr-token', 'demo-static-token')
+
+        // Try demo login (may fail on static hosting, that's ok)
+        try {
+            await loginDemo()
+        } catch (error) {
+            console.warn('Demo login not available (static hosting), using offline mode')
         }
+
         navigate({ to: '/app/connect' })
     }
 
