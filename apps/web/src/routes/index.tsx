@@ -12,19 +12,16 @@ function LandingPage() {
     const { isAuthenticated, loginDemo, isLoading } = useAuth()
     const navigate = useNavigate()
 
-    const handleGetStarted = async () => {
+    const handleGetStarted = () => {
+        // Navigate directly - auth is optional for demo/static hosting
+        // The loginDemo API call may fail on static hosts like Netlify
         if (!isAuthenticated) {
-            try {
-                await loginDemo()
-                navigate({ to: '/app/connect' })
-            } catch (error) {
-                console.error('Demo login failed:', error)
-                // Still navigate to app - the user can try again from there
-                navigate({ to: '/app/connect' })
-            }
-        } else {
-            navigate({ to: '/app/connect' })
+            // Try demo login in background, but navigate immediately
+            loginDemo().catch((error) => {
+                console.warn('Demo login not available (static hosting):', error)
+            })
         }
+        navigate({ to: '/app/connect' })
     }
 
     return (
