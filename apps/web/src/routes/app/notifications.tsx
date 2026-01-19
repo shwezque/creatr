@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Bell, Check, Gift, TrendingUp, Users, Loader2 } from 'lucide-react'
+import { Bell, Check, Gift, TrendingUp, Users } from 'lucide-react'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/lib/utils'
