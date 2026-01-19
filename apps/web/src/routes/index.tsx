@@ -12,14 +12,16 @@ function LandingPage() {
     const { isAuthenticated, loginDemo, isLoading } = useAuth()
     const navigate = useNavigate()
 
-    const handleGetStarted = () => {
-        // Navigate directly - auth is optional for demo/static hosting
-        // The loginDemo API call may fail on static hosts like Netlify
+    const handleGetStarted = async () => {
+        // Try demo login first, with fallback for static hosting
         if (!isAuthenticated) {
-            // Try demo login in background, but navigate immediately
-            loginDemo().catch((error) => {
-                console.warn('Demo login not available (static hosting):', error)
-            })
+            try {
+                await loginDemo()
+            } catch (error) {
+                console.warn('Demo login not available (static hosting), using offline mode:', error)
+                // Set a demo token for static hosting - this allows the auth guard to pass
+                localStorage.setItem('creatr-token', 'demo-static-token')
+            }
         }
         navigate({ to: '/app/connect' })
     }
