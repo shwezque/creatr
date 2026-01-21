@@ -142,6 +142,16 @@ function saveShopProducts(productIds: string[]) {
     localStorage.setItem('creatr-shop-products', JSON.stringify(productIds))
 }
 
+function getStoredShoplinks(): Array<{ id: string; productId: string; shoplink: string }> {
+    if (typeof window === 'undefined') return []
+    const stored = localStorage.getItem('creatr-shoplinks')
+    return stored ? JSON.parse(stored) : []
+}
+
+function saveShoplinks(links: Array<{ id: string; productId: string; shoplink: string }>) {
+    localStorage.setItem('creatr-shoplinks', JSON.stringify(links))
+}
+
 function RecommendationsPage() {
     const { toast } = useToast()
     const [myProductIds, setMyProductIds] = useState<Set<string>>(new Set())
@@ -158,36 +168,91 @@ function RecommendationsPage() {
         // Simulate adding delay
         await new Promise((resolve) => setTimeout(resolve, 500))
 
+        // Add to shop products
         const updatedIds = new Set(myProductIds)
         updatedIds.add(productId)
         setMyProductIds(updatedIds)
         saveShopProducts(Array.from(updatedIds))
+
+        // Auto-generate shoplink
+        const existingLinks = getStoredShoplinks()
+        if (!existingLinks.some(link => link.productId === productId)) {
+            const newLink = {
+                id: `link-${Date.now()}`,
+                productId,
+                shoplink: `https://creatr.shop/p/${productId}?ref=demo_creator`,
+            }
+            saveShoplinks([...existingLinks, newLink])
+        }
+
         setAddingProductId(null)
 
         toast({
             title: 'Added to your shop!',
-            description: 'Generate a shoplink to start earning.'
+            description: 'Your shoplink is ready to share.'
+        })
+    }
+
+    const handleAddAll = async () => {
+        setAddingProductId('all')
+        await new Promise((resolve) => setTimeout(resolve, 800))
+
+        const allIds = mockProducts.map(p => p.id)
+        const newIds = new Set(allIds)
+        setMyProductIds(newIds)
+        saveShopProducts(allIds)
+
+        // Auto-generate shoplinks for all
+        const existingLinks = getStoredShoplinks()
+        const newLinks = allIds
+            .filter(productId => !existingLinks.some(link => link.productId === productId))
+            .map(productId => ({
+                id: `link-${Date.now()}-${productId}`,
+                productId,
+                shoplink: `https://creatr.shop/p/${productId}?ref=demo_creator`,
+            }))
+        saveShoplinks([...existingLinks, ...newLinks])
+
+        setAddingProductId(null)
+        toast({
+            title: 'All products added!',
+            description: `${allIds.length} shoplinks are ready to share.`
         })
     }
 
     return (
         <div className="space-y-6">
-            <div className="flex items-start justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold">Recommended For You</h1>
-                    <p className="text-muted-foreground">Products matched to your content and audience.</p>
-                </div>
-                <Button asChild size="sm" className="shrink-0">
-                    <Link to="/app/shoplinks">
-                        {myProductIds.size > 0 && (
-                            <span className="mr-2 rounded-full bg-white/20 px-2 py-0.5 text-xs">
-                                {myProductIds.size}
-                            </span>
+            {/* Sticky header with Next button */}
+            <div className="sticky top-14 z-40 -mx-4 bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+                <div className="flex items-start justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold">Recommended For You</h1>
+                        <p className="text-muted-foreground">Products matched to your content and audience.</p>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                        {myProductIds.size < mockProducts.length && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleAddAll}
+                                disabled={addingProductId === 'all'}
+                            >
+                                {addingProductId === 'all' ? 'Adding...' : 'Add All'}
+                            </Button>
                         )}
-                        Next
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                </Button>
+                        <Button asChild size="sm">
+                            <Link to="/app/shoplinks">
+                                {myProductIds.size > 0 && (
+                                    <span className="mr-2 rounded-full bg-white/20 px-2 py-0.5 text-xs">
+                                        {myProductIds.size}
+                                    </span>
+                                )}
+                                Next
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                            </Link>
+                        </Button>
+                    </div>
+                </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">

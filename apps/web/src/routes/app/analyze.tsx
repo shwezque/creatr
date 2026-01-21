@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState, useEffect, useCallback } from 'react'
-import { ArrowRight, Check, Loader2 } from 'lucide-react'
+import { ArrowRight, Check, Loader2, Edit2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Progress } from '@/shared/ui/progress'
+import { Badge } from '@/shared/ui/badge'
 import { cn } from '@/shared/lib/utils'
+import { useToast } from '@/shared/ui/use-toast'
 
 export const Route = createFileRoute('/app/analyze')({
     component: AnalyzePage,
@@ -17,13 +19,38 @@ const steps = [
     { id: 4, label: 'Generating fit', description: 'Finding your best product matches' },
 ]
 
+// Available content categories
+const ALL_CATEGORIES = ['Beauty', 'Tech', 'Fashion', 'Fitness', 'Lifestyle', 'Food', 'Travel', 'Gaming', 'Home']
+
+// Mock detected categories based on connected platforms
+const DETECTED_CATEGORIES: Array<{ name: string; source: string; confidence: number }> = [
+    { name: 'Beauty', source: 'Instagram', confidence: 92 },
+    { name: 'Fashion', source: 'Instagram', confidence: 87 },
+    { name: 'Lifestyle', source: 'TikTok', confidence: 78 },
+    { name: 'Fitness', source: 'YouTube', confidence: 65 },
+]
+
 // Total analysis time: 3 seconds (750ms per step)
 const STEP_DURATION_MS = 750
 
+function getStoredCategories(): string[] {
+    if (typeof window === 'undefined') return []
+    const stored = localStorage.getItem('creatr-categories')
+    return stored ? JSON.parse(stored) : []
+}
+
+function saveCategories(categories: string[]) {
+    localStorage.setItem('creatr-categories', JSON.stringify(categories))
+}
+
 function AnalyzePage() {
+    const { toast } = useToast()
     const [currentStep, setCurrentStep] = useState(1)
     const [isComplete, setIsComplete] = useState(false)
     const [progress, setProgress] = useState(0)
+    const [categories, setCategories] = useState<Array<{ name: string; source: string; confidence: number }>>([])
+    const [isEditing, setIsEditing] = useState(false)
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([])
 
     // Check if analysis was already completed
     useEffect(() => {
@@ -31,6 +58,19 @@ function AnalyzePage() {
         if (analysisComplete === 'true') {
             setIsComplete(true)
             setCurrentStep(5) // Past all steps
+            // Load stored categories or use detected ones
+            const storedCats = getStoredCategories()
+            if (storedCats.length > 0) {
+                setCategories(storedCats.map(name => ({
+                    name,
+                    source: DETECTED_CATEGORIES.find(c => c.name === name)?.source || 'Custom',
+                    confidence: DETECTED_CATEGORIES.find(c => c.name === name)?.confidence || 0
+                })))
+                setSelectedCategories(storedCats)
+            } else {
+                setCategories(DETECTED_CATEGORIES)
+                setSelectedCategories(DETECTED_CATEGORIES.map(c => c.name))
+            }
         }
     }, [])
 
@@ -60,6 +100,10 @@ function AnalyzePage() {
             setCurrentStep(5)
             setIsComplete(true)
             localStorage.setItem('creatr-analysis-complete', 'true')
+            // Set initial categories
+            setCategories(DETECTED_CATEGORIES)
+            setSelectedCategories(DETECTED_CATEGORIES.map(c => c.name))
+            saveCategories(DETECTED_CATEGORIES.map(c => c.name))
         }
     }, [currentStep, isComplete])
 
@@ -70,6 +114,31 @@ function AnalyzePage() {
         return () => clearTimeout(timer)
     }, [advanceStep, isComplete])
 
+    const toggleCategory = (categoryName: string) => {
+        setSelectedCategories(prev => {
+            if (prev.includes(categoryName)) {
+                return prev.filter(c => c !== categoryName)
+            } else {
+                return [...prev, categoryName]
+            }
+        })
+    }
+
+    const saveChanges = () => {
+        if (selectedCategories.length === 0) {
+            toast({ title: 'Please select at least one category' })
+            return
+        }
+        saveCategories(selectedCategories)
+        setCategories(selectedCategories.map(name => ({
+            name,
+            source: DETECTED_CATEGORIES.find(c => c.name === name)?.source || 'Custom',
+            confidence: DETECTED_CATEGORIES.find(c => c.name === name)?.confidence || 0
+        })))
+        setIsEditing(false)
+        toast({ title: 'Categories updated!' })
+    }
+
     return (
         <div className="mx-auto max-w-lg space-y-6">
             <div className="text-center">
@@ -78,7 +147,7 @@ function AnalyzePage() {
                 </h1>
                 <p className="text-muted-foreground">
                     {isComplete
-                        ? 'We found the best products for your audience.'
+                        ? 'We identified your content categories and found the best products for you.'
                         : 'This usually takes about 5 seconds...'}
                 </p>
             </div>
@@ -134,6 +203,80 @@ function AnalyzePage() {
                 </CardContent>
             </Card>
 
+            {/* Content Categories Section - shown after analysis */}
+            {isComplete && (
+                <Card>
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="font-semibold">Your Content Categories</h2>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsEditing(!isEditing)}
+                            >
+                                {isEditing ? (
+                                    <>Cancel</>
+                                ) : (
+                                    <><Edit2 className="h-4 w-4 mr-1" /> Edit</>
+                                )}
+                            </Button>
+                        </div>
+
+                        {!isEditing ? (
+                            <div className="space-y-3">
+                                {categories.map((cat) => (
+                                    <div key={cat.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                                        <div className="flex items-center gap-3">
+                                            <Badge variant="secondary">{cat.name}</Badge>
+                                            <span className="text-sm text-muted-foreground">
+                                                via {cat.source}
+                                            </span>
+                                        </div>
+                                        {cat.confidence > 0 && (
+                                            <span className="text-sm font-medium text-green-600">
+                                                {cat.confidence}% match
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
+                                <p className="text-xs text-muted-foreground mt-3">
+                                    These categories help us recommend products that align with your content.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Select the categories that best describe your content:
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    {ALL_CATEGORIES.map((cat) => {
+                                        const isSelected = selectedCategories.includes(cat)
+                                        return (
+                                            <button
+                                                key={cat}
+                                                onClick={() => toggleCategory(cat)}
+                                                className={cn(
+                                                    'px-3 py-2 rounded-full text-sm font-medium transition-all',
+                                                    isSelected
+                                                        ? 'bg-primary text-primary-foreground'
+                                                        : 'bg-muted hover:bg-muted/80'
+                                                )}
+                                            >
+                                                {isSelected && <Check className="inline h-3 w-3 mr-1" />}
+                                                {cat}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                                <Button onClick={saveChanges} className="w-full">
+                                    Save Categories
+                                </Button>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
+
             {isComplete && (
                 <div className="flex justify-center">
                     <Button size="lg" asChild>
@@ -146,4 +289,3 @@ function AnalyzePage() {
         </div>
     )
 }
-

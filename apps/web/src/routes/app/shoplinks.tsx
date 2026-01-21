@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { Copy } from 'lucide-react'
+import { Copy, Trash2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { useToast } from '@/shared/ui/use-toast'
@@ -34,6 +34,10 @@ function getStoredShopProducts(): string[] {
     return stored ? JSON.parse(stored) : []
 }
 
+function saveShopProducts(productIds: string[]) {
+    localStorage.setItem('creatr-shop-products', JSON.stringify(productIds))
+}
+
 function getStoredShoplinks(): Shoplink[] {
     if (typeof window === 'undefined') return []
     const stored = localStorage.getItem('creatr-shoplinks')
@@ -46,41 +50,29 @@ function saveShoplinks(links: Shoplink[]) {
 
 function ShoplinksPage() {
     const { toast } = useToast()
-    const [shopProducts, setShopProducts] = useState<string[]>([])
     const [shoplinks, setShoplinks] = useState<Shoplink[]>([])
-    const [generatingId, setGeneratingId] = useState<string | null>(null)
 
     useEffect(() => {
-        setShopProducts(getStoredShopProducts())
         setShoplinks(getStoredShoplinks())
     }, [])
-
-    const productsWithoutLinks = shopProducts.filter(
-        productId => !shoplinks.some(link => link.productId === productId)
-    )
-
-    const handleGenerate = async (productId: string) => {
-        setGeneratingId(productId)
-        await new Promise(resolve => setTimeout(resolve, 500))
-
-        const newLink: Shoplink = {
-            id: `link-${Date.now()}`,
-            productId,
-            shoplink: `https://creatr.shop/p/${productId}?ref=demo_creator`,
-        }
-
-        const updatedLinks = [...shoplinks, newLink]
-        setShoplinks(updatedLinks)
-        saveShoplinks(updatedLinks)
-        setGeneratingId(null)
-
-        navigator.clipboard.writeText(newLink.shoplink)
-        toast({ title: 'Shoplink created and copied!' })
-    }
 
     const copyLink = (link: string) => {
         navigator.clipboard.writeText(link)
         toast({ title: 'Link copied!' })
+    }
+
+    const handleRemove = (productId: string) => {
+        // Remove from shop products
+        const shopProducts = getStoredShopProducts()
+        const updatedProducts = shopProducts.filter(id => id !== productId)
+        saveShopProducts(updatedProducts)
+
+        // Also remove any associated shoplink
+        const updatedLinks = shoplinks.filter(link => link.productId !== productId)
+        setShoplinks(updatedLinks)
+        saveShoplinks(updatedLinks)
+
+        toast({ title: 'Product removed from your shop' })
     }
 
     return (
@@ -90,7 +82,7 @@ function ShoplinksPage() {
                 <p className="text-muted-foreground">Share these links to earn commissions.</p>
             </div>
 
-            {shoplinks.length === 0 && productsWithoutLinks.length === 0 && (
+            {shoplinks.length === 0 && (
                 <div className="py-12 text-center text-muted-foreground">
                     <p className="mb-4">No shoplinks yet. Add products to get started!</p>
                     <Button asChild>
@@ -99,38 +91,8 @@ function ShoplinksPage() {
                 </div>
             )}
 
-            {productsWithoutLinks.length > 0 && (
-                <div className="space-y-3">
-                    <h2 className="text-sm font-medium text-muted-foreground">Generate Links</h2>
-                    {productsWithoutLinks.map((productId) => {
-                        const product = mockProducts[productId] || { name: `Product ${productId}`, brand: 'Unknown', imageUrl: '', price: 0 }
-                        return (
-                            <Card key={productId}>
-                                <CardContent className="flex items-center gap-3 p-3">
-                                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
-                                        <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="line-clamp-1 font-medium">{product.name}</p>
-                                        <p className="text-sm text-muted-foreground">{product.brand}</p>
-                                    </div>
-                                    <Button
-                                        size="sm"
-                                        onClick={() => handleGenerate(productId)}
-                                        disabled={generatingId === productId}
-                                    >
-                                        {generatingId === productId ? 'Generating...' : 'Generate'}
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        )
-                    })}
-                </div>
-            )}
-
             {shoplinks.length > 0 && (
                 <div className="space-y-3">
-                    <h2 className="text-sm font-medium text-muted-foreground">Active Links</h2>
                     {shoplinks.map((link) => {
                         const product = mockProducts[link.productId] || { name: `Product ${link.productId}`, brand: 'Unknown', imageUrl: '', price: 0 }
                         return (
@@ -143,13 +105,32 @@ function ShoplinksPage() {
                                         <p className="line-clamp-1 font-medium">{product.name}</p>
                                         <p className="text-sm text-muted-foreground">{product.brand} • {formatCurrency(product.price)}</p>
                                     </div>
-                                    <Button variant="outline" size="sm" className="shrink-0" onClick={() => copyLink(link.shoplink)}>
-                                        <Copy className="mr-2 h-4 w-4" /> Copy
-                                    </Button>
+                                    <div className="flex gap-2 shrink-0">
+                                        <Button variant="outline" size="sm" onClick={() => copyLink(link.shoplink)}>
+                                            <Copy className="mr-2 h-4 w-4" /> Copy
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            onClick={() => handleRemove(link.productId)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </CardContent>
                             </Card>
                         )
                     })}
+                </div>
+            )}
+
+            {/* Browse More Products button */}
+            {shoplinks.length > 0 && (
+                <div className="pt-2">
+                    <Button variant="outline" className="w-full" asChild>
+                        <Link to="/app/recommendations">Browse More Products</Link>
+                    </Button>
                 </div>
             )}
         </div>

@@ -4,11 +4,10 @@ import { Button } from '@/shared/ui/button'
 import { useTheme } from '@/app/providers/theme-provider'
 
 interface TopBarProps {
-    title?: string
     showBack?: boolean
 }
 
-export function TopBar({ title = 'Creatr' }: TopBarProps) {
+export function TopBar(_props: TopBarProps) {
     const { theme, setTheme } = useTheme()
     const navigate = useNavigate()
 
@@ -23,11 +22,12 @@ export function TopBar({ title = 'Creatr' }: TopBarProps) {
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-top">
             <div className="container flex h-14 items-center justify-between">
-                <Link to="/app" className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                        <span className="text-lg font-bold text-primary-foreground">C</span>
-                    </div>
-                    <span className="text-lg font-semibold">{title}</span>
+                <Link to="/app" className="flex items-center">
+                    <img
+                        src={theme === 'dark' ? '/creatr-logo-white.png' : '/creatr-logo.png'}
+                        alt="Creatr"
+                        className="h-7"
+                    />
                 </Link>
 
                 <div className="flex items-center gap-2">

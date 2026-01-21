@@ -79,10 +79,110 @@ function saveCreditState(state: CreditState) {
     localStorage.setItem('creatr-credit', JSON.stringify(state))
 }
 
+// SVG Bill component
+function PesoBill({ className, style }: { className?: string; style?: React.CSSProperties }) {
+    return (
+        <svg viewBox="0 0 80 40" className={className} style={style}>
+            <rect x="2" y="2" width="76" height="36" rx="4" fill="url(#billGradient)" stroke="#15803d" strokeWidth="1.5" />
+            <text x="40" y="26" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#166534">₱</text>
+            <circle cx="12" cy="20" r="6" fill="#22c55e" opacity="0.3" />
+            <circle cx="68" cy="20" r="6" fill="#22c55e" opacity="0.3" />
+            <defs>
+                <linearGradient id="billGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#dcfce7" />
+                    <stop offset="50%" stopColor="#bbf7d0" />
+                    <stop offset="100%" stopColor="#86efac" />
+                </linearGradient>
+            </defs>
+        </svg>
+    )
+}
+
+// SVG Bank building icon with jiggle animation
+function BankIcon() {
+    return (
+        <svg viewBox="0 0 80 70" className="w-20 h-16 animate-[jiggle_0.5s_ease-in-out_infinite]">
+            {/* Roof/Triangle */}
+            <polygon points="40,5 75,28 5,28" fill="url(#bankGradient)" />
+            {/* Roof line */}
+            <rect x="5" y="26" width="70" height="5" rx="1" fill="#059669" />
+            {/* Main body */}
+            <rect x="8" y="31" width="64" height="30" fill="url(#bankGradient)" />
+            {/* Columns */}
+            <rect x="14" y="34" width="6" height="24" rx="1" fill="#047857" />
+            <rect x="28" y="34" width="6" height="24" rx="1" fill="#047857" />
+            <rect x="46" y="34" width="6" height="24" rx="1" fill="#047857" />
+            <rect x="60" y="34" width="6" height="24" rx="1" fill="#047857" />
+            {/* Base */}
+            <rect x="3" y="61" width="74" height="6" rx="2" fill="#059669" />
+            {/* Door */}
+            <rect x="33" y="45" width="14" height="16" rx="2" fill="#064e3b" />
+            {/* Peso symbol on top */}
+            <text x="40" y="20" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#ecfdf5">₱</text>
+            <defs>
+                <linearGradient id="bankGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#059669" />
+                </linearGradient>
+            </defs>
+        </svg>
+    )
+}
+
+
+// Professional wealth-themed animation component with piggybank and flying bills
+function WealthAnimation() {
+    return (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {/* Animated gradient background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-pink-500/5 animate-pulse" />
+
+            {/* Flying peso bills */}
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+                <div
+                    key={i}
+                    className="absolute"
+                    style={{
+                        left: `${15 + (i * 12)}%`,
+                        animation: `flyBill ${2 + (i * 0.3)}s ease-out ${i * 0.4}s infinite`,
+                        top: '60%',
+                        opacity: 0,
+                    }}
+                >
+                    <PesoBill className="w-12 h-6" style={{ transform: `rotate(${-15 + i * 8}deg)` }} />
+                </div>
+            ))}
+
+            <style>{`
+                @keyframes flyBill {
+                    0% { 
+                        transform: translateY(0) translateX(0) scale(0.5) rotate(0deg);
+                        opacity: 0;
+                    }
+                    20% {
+                        opacity: 0.9;
+                    }
+                    100% { 
+                        transform: translateY(-120px) translateX(30px) scale(1.1) rotate(15deg);
+                        opacity: 0;
+                    }
+                }
+                @keyframes jiggle {
+                    0%, 100% { transform: rotate(-3deg); }
+                    25% { transform: rotate(3deg) scale(1.05); }
+                    50% { transform: rotate(-2deg); }
+                    75% { transform: rotate(2deg) scale(1.02); }
+                }
+            `}</style>
+        </div>
+    )
+}
+
 function CreditPage() {
     const { toast } = useToast()
     const [creditState, setCreditState] = useState<CreditState>({ hasConsented: false, hasScore: false })
     const [isLoading, setIsLoading] = useState(false)
+    const [isCalculating, setIsCalculating] = useState(false)
 
     useEffect(() => {
         setCreditState(getCreditState())
@@ -104,7 +204,9 @@ function CreditPage() {
 
     const handleCalculateScore = async () => {
         setIsLoading(true)
-        await new Promise(resolve => setTimeout(resolve, 1500))
+        setIsCalculating(true)
+
+        await new Promise(resolve => setTimeout(resolve, 3500))
 
         // Generate random score
         const score = Math.floor(Math.random() * 300) + 600
@@ -119,6 +221,7 @@ function CreditPage() {
 
         setCreditState(newState)
         saveCreditState(newState)
+        setIsCalculating(false)
         setIsLoading(false)
     }
 
@@ -141,7 +244,7 @@ function CreditPage() {
                 />
             )}
 
-            {hasConsented && !hasScore && (
+            {hasConsented && !hasScore && !isCalculating && (
                 <Card>
                     <CardContent className="py-8 text-center">
                         <Shield className="mx-auto mb-4 h-12 w-12 text-primary" />
@@ -153,6 +256,62 @@ function CreditPage() {
                             {isLoading ? 'Calculating...' : 'Calculate Score'}
                         </Button>
                     </CardContent>
+                </Card>
+            )}
+
+            {/* Professional Wealth Loading Animation */}
+            {isCalculating && (
+                <Card className="relative overflow-hidden border-emerald-500/20">
+                    <WealthAnimation />
+                    <CardContent className="py-12 text-center relative z-10">
+                        {/* Bank icon illustration */}
+                        <div className="mb-6 flex justify-center">
+                            <div className="relative">
+                                <BankIcon />
+                                {/* Sparkle effects */}
+                                <div className="absolute -top-2 -right-2 w-3 h-3 bg-yellow-400 rounded-full animate-ping" />
+                                <div className="absolute -bottom-1 -left-2 w-2 h-2 bg-emerald-400 rounded-full animate-ping" style={{ animationDelay: '500ms' }} />
+                            </div>
+                        </div>
+
+                        <h3 className="text-lg font-semibold mb-1 bg-gradient-to-r from-emerald-600 to-green-500 bg-clip-text text-transparent">
+                            Unlocking Your Potential
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-6">
+                            Analyzing your creator profile for financing opportunities
+                        </p>
+
+                        {/* Progress indicator */}
+                        <div className="max-w-xs mx-auto mb-6">
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full"
+                                    style={{ animation: 'progress 3s ease-in-out forwards' }}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2 text-sm text-muted-foreground">
+                            <p className="flex items-center justify-center gap-2">
+                                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                                Analyzing your social metrics
+                            </p>
+                            <p className="flex items-center justify-center gap-2">
+                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: '200ms' }} />
+                                Evaluating earning potential
+                            </p>
+                            <p className="flex items-center justify-center gap-2">
+                                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '400ms' }} />
+                                Finding the best offers for you
+                            </p>
+                        </div>
+                    </CardContent>
+                    <style>{`
+                        @keyframes progress {
+                            0% { width: 0%; }
+                            100% { width: 100%; }
+                        }
+                    `}</style>
                 </Card>
             )}
 
